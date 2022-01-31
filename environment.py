@@ -65,78 +65,195 @@ class pricing_MAB():
         self.segments = segments
         self.update_freq = update_freq
         self.exp = exp
-        self.season = 0
-#         self.R = self.price_list.reshape(K,1) @ np.arange(N).reshape(1,N)
+        self.t = 0
+        self.T = T
         if exp == 'exp6':
-            self.t = 0
             self.brownian = brownian(0)
             self.brownian_sequence = self.brownian.gen_sequence(T)
             
 
-    def segments_means(self, param1=3,param2=6, shift=0):
-        #default from beta(3,6)
-        #means = True or list
-        if self.exp in ['exp3','exp5','exp6']:
-            self.seg_means = np.random.beta(param1,param2,self.segments) + shift
-            if self.segments < 30:
-                print('segments means',self.seg_means)
-            else:
-                print('first 30 segments means',self.seg_means[:30])
-                
-        elif self.exp == 'exp4':
+    def segments_means(self, param1=3,param2=6, shift=0.3):
+        if self.exp in ['exp1', 'exp4', 'exp5']:
             self.seg_means = np.random.beta(param1,param2,self.segments)
-            if self.segments < 30:
-                print('segments means',self.seg_means)
-            else:
-                print('first 30 segments means',self.seg_means[:30])
-            self.high_risk_semgents = np.random.choice(self.segments, round(self.segments * 0.01), replace=False)
             
-        else:
-            print('need to design new means')
+        elif self.exp == 'exp2':
+            self.seg_means = np.random.beta(param1,param2,self.segments)
+            self.seg_means_2 = np.random.beta(param1,param2,self.segments) + shift
+
+        elif self.exp == 'exp3':
+            self.seg_means = np.random.beta(param1,param2,self.segments)
+            self.seg_means_2 = np.random.beta(param1,param2,self.segments) - shift
         
-            
+        elif self.exp == 'exp6':
+            self.seg_means = np.random.beta(param1,param2,self.segments)
+            self.seg_means_2 = np.random.beta(param2,param1,self.segments)
+                    
     def customer_simulation(self, price, within=True):
-        if self.exp == 'exp3':
+        if self.exp == 'exp1':
             chosen_segments_index = np.random.choice(self.segments, self.update_freq, replace=True)
             chosen_segments = self.seg_means[chosen_segments_index]
             customer_values = chosen_segments + np.random.normal(0, 0.1, self.update_freq)
             reaction = (customer_values >= price)
             reward = price * np.sum(reaction)
+        
+        elif self.exp in ['exp2', 'exp3', 'exp6']:
+            stage_1 = int(self.T / 2)
+            if self.t < stage_1:
+                chosen_segments_index = np.random.choice(self.segments, self.update_freq, replace=True)
+                chosen_segments = self.seg_means[chosen_segments_index]
+                customer_values = chosen_segments + np.random.normal(0, 0.1, self.update_freq)
+                reaction = (customer_values >= price)
+                reward = price * np.sum(reaction)
+                self.t += 1
+            else:
+                chosen_segments_index = np.random.choice(self.segments, self.update_freq, replace=True)
+                chosen_segments = self.seg_means_2[chosen_segments_index]
+                customer_values = chosen_segments + np.random.normal(0, 0.1, self.update_freq)
+                reaction = (customer_values >= price)
+                reward = price * np.sum(reaction)
+                self.t += 1
+            if self.t == self.T:
+                self.reset_t()
+    
         elif self.exp == 'exp4':
             chosen_segments_index = np.random.choice(self.segments, self.update_freq, replace=True)
             chosen_segments = self.seg_means[chosen_segments_index]
-            customer_values = chosen_segments + np.random.normal(0, 0.1, self.update_freq)
-            reaction = (customer_values >= price)
-            #count number of high_risk_semgents
-            count = 0
-            for segment in chosen_segments_index[reaction]: #only deal segments will trigger default -> so the price should not be set too low
-                if segment in self.high_risk_semgents:
-                    count += 1
-            penalty = sum(np.random.binomial(1, 0.1, count)) * -10
-            reward = price * np.sum(reaction) + penalty
-        elif self.exp == 'exp5':
-            chosen_segments_index = np.random.choice(self.segments, self.update_freq, replace=True)
-            chosen_segments = self.seg_means[chosen_segments_index]
-            #set a constant 0.2 so that the sin function is bound by [-0.3,0.3]
+            #set a constant 0.3 so that the sin function is bound by [-0.3,0.3]
             customer_values = chosen_segments + np.random.normal(0, 0.1, self.update_freq) + 0.3 * np.sin(self.season)
             reaction = (customer_values >= price)
             reward = price * np.sum(reaction)
-            #update pi/4000 once at a time such that 8000 rounds will fulfill a complete cycle of sin from -1 to 1
-            self.season += (np.pi / 4000)
-        elif self.exp == 'exp6':
+            #update pi/(1/T/2) once at a time such that 8000 rounds will fulfill a complete cycle of sin from -1 to 1
+            #complete two season in the experiment
+            self.t += (np.pi / (self.T/2))
+            if self.t == (self.T - 1):
+                self.reset_t()
+
+        elif self.exp == 'exp5':
             chosen_segments_index = np.random.choice(self.segments, self.update_freq, replace=True)
             chosen_segments = self.seg_means[chosen_segments_index]
             customer_values = chosen_segments + np.random.normal(0, 0.1, self.update_freq) + self.brownian_sequence[self.t]
             reaction = (customer_values >= price)
             reward = price * np.sum(reaction)
             self.t += 1
-        else:
-            print('need to design new simulation')
-            
+            if self.t == (self.T - 1):
+                self.reset_t()
         return reward, chosen_segments_index, reaction
-    
-    def reset_seasonality(self):
-        self.season = 0
         
-    def reset_volatility(self):
+    def reset_t(self):
         self.t = 0
+
+    def true_optimal(self):
+        if self.exp == 'exp1':
+            df, optimal_arm = self.simulator_exp1()
+            print("The true optimal arm is:", optimal_arm)
+            return df
+            
+        if self.exp in ['exp2', 'exp3', 'exp6']:
+            df, optimal_arm, df_2, optimal_arm_2  = self.simulator_exp236()
+            print("The true optimal arm in first", int(self.T/2), "rounds is:", optimal_arm)
+            print("The true optimal arm in the rest is:", optimal_arm_2)
+            return df, df_2
+
+        if self.exp == ['exp4', 'exp5']:
+            df, optimal_arm, df_2, optimal_arm_2  = self.simulator_exp45()
+            print("The highest true optimal is", optimal_arm)
+            print("The lowest true optimal is:", optimal_arm_2)
+            return df, df_2
+
+
+    def simulator_exp1(self, simu=1000):
+        df = pd.DataFrame(columns=['arm','price','reward'])
+        for arm in range(self.price_list.shape[0]):
+            price = self.price_list[arm]
+            observation = []
+            all_p_y = np.zeros(shape=(11))
+            for rounds in range(simu):
+                reward, _, reaction = self.customer_simulation(self.price_list[arm])
+                df = df.append({'arm':arm,'price':price, 'reward':reward},ignore_index=True)
+                observation.append(sum(reaction))
+            for i in range(11):
+                all_p_y[i] = observation.count(i) / simu
+        optimal_arm = np.argmax(df.groupby('price')['reward'].mean())
+        return df, optimal_arm
+
+    def simulator_exp236(self, simu=1000):
+        df = pd.DataFrame(columns=['arm','price','reward'])
+        for arm in range(self.price_list.shape[0]):
+            price = self.price_list[arm]
+            observation = []
+            all_p_y = np.zeros(shape=(11))
+            for rounds in range(simu):
+                chosen_segments_index = np.random.choice(self.segments, self.update_freq, replace=True)
+                chosen_segments = self.seg_means[chosen_segments_index]
+                customer_values = chosen_segments + np.random.normal(0, 0.1, self.update_freq)
+                reaction = (customer_values >= price)
+                reward = price * np.sum(reaction)
+                df = df.append({'arm':arm,'price':price,'reward':reward},ignore_index=True)
+                observation.append(sum(reaction))
+            for i in range(11):
+                all_p_y[i] = observation.count(i) / simu
+        optimal_arm = np.argmax(df.groupby('price')['reward'].mean())
+
+        df_2 = pd.DataFrame(columns=['arm','price','reward'])
+        for arm in range(self.price_list.shape[0]):
+            price = self.price_list[arm]
+            observation = []
+            all_p_y = np.zeros(shape=(11))
+            for rounds in range(simu):
+                chosen_segments_index = np.random.choice(self.segments, self.update_freq, replace=True)
+                chosen_segments = self.seg_means_2[chosen_segments_index]
+                customer_values = chosen_segments + np.random.normal(0, 0.1, self.update_freq)
+                reaction = (customer_values >= price)
+                reward = price * np.sum(reaction)
+                df_2 = df_2.append({'arm':arm,'price':price,'reward':reward},ignore_index=True)
+                observation.append(sum(reaction))
+            for i in range(11):
+                all_p_y[i] = observation.count(i) / simu
+        optimal_arm_2 = np.argmax(df_2.groupby('price')['reward'].mean())
+            
+        return df, optimal_arm, df_2, optimal_arm_2
+
+        
+    def simulator_exp45(self, simu=1000):
+        if self.exp == 'exp4':
+            highest = 0.3
+            lowest = -0.3
+        elif self.exp == 'exp5':
+            highest = max(self.brownian_sequence)
+            lowest = min(self.brownian_sequence)
+
+        df = pd.DataFrame(columns=['arm','price','reward'])
+        for arm in range(self.price_list.shape[0]):
+            price = self.price_list[arm]
+            observation = []
+            all_p_y = np.zeros(shape=(11))
+            for rounds in range(simu):
+                chosen_segments_index = np.random.choice(self.segments, self.update_freq, replace=True)
+                chosen_segments = self.seg_means[chosen_segments_index]
+                customer_values = chosen_segments + np.random.normal(0, 0.1, self.update_freq) + highest
+                reaction = (customer_values >= price)
+                reward = price * np.sum(reaction)
+                df = df.append({'arm':arm,'price':price,'reward':reward},ignore_index=True)
+                observation.append(sum(reaction))
+            for i in range(11):
+                all_p_y[i] = observation.count(i) / simu
+        optimal_arm = np.argmax(df.groupby('price')['reward'].mean())
+
+        df_2 = pd.DataFrame(columns=['arm','price','reward'])
+        for arm in range(self.price_list.shape[0]):
+            price = self.price_list[arm]
+            observation = []
+            all_p_y = np.zeros(shape=(11))
+            for rounds in range(simu):
+                chosen_segments_index = np.random.choice(self.segments, self.update_freq, replace=True)
+                chosen_segments = self.seg_means_2[chosen_segments_index]
+                customer_values = chosen_segments + np.random.normal(0, 0.1, self.update_freq) + lowest
+                reaction = (customer_values >= price)
+                reward = price * np.sum(reaction)
+                df_2 = df_2.append({'arm':arm,'price':price,'reward':reward},ignore_index=True)
+                observation.append(sum(reaction))
+            for i in range(11):
+                all_p_y[i] = observation.count(i) / simu
+        optimal_arm_2 = np.argmax(df_2.groupby('price')['reward'].mean())
+            
+        return df, optimal_arm, df_2, optimal_arm_2

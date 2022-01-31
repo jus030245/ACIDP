@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import time
 import seaborn as sns
 from scipy import stats
+from util import *
 
 class UCBPI_pull():
     def __init__(self, price_list, segments, c, bias, UCB1):
