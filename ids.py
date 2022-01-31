@@ -246,6 +246,7 @@ class IDS_pull():
                     self.IDS_results['g'].append('eg_shape')
                     self.IDS_results['IR'].append('eg_shape')
             self.detected_stamp = detected_stamp_temp
+            self.collection_rounds += 5
         else:
             pass
         return eg_on
@@ -258,20 +259,20 @@ class IDS_pull():
     def test_demand_shape(self):
         unique_sammple_size = len(np.unique(self.arm_sequence[self.detected_stamp:]))
         if unique_sammple_size < 4:
-            print('mark1')
             eg_on = self.eg_shape()
             if eg_on:
-                print('mark2')
                 after_sample_df = pd.DataFrame({'arm':self.arm_sequence[self.detected_stamp:], 
                                         'observation':self.observation[self.detected_stamp:],
                                         'total':10})
                 demand_test_df = after_sample_df.groupby('arm')[['observation', 'total']].sum()
                 demand_test_df['pvalue'] = demand_test_df.apply(self.get_pvalue, axis=1)
+                print(demand_test_df.pvalue)
                 if any(demand_test_df.pvalue < (0.01 / demand_test_df.shape[0])):
                     #test will only be conducted once each time after detector was triggered first
                     #if tested significant -> update likelihood
                     #if tested non-significant -> keep exploitation
                     self.detected_stamp = None
+                    self.eg_on = False
                     print('demand shape does not match')
                     for i in range(self.update_L):
                         self.update_likelihood()
@@ -280,11 +281,10 @@ class IDS_pull():
                     #tested non-significant, alarm goes off
                     print('tested non-significant')
                     self.detected_stamp = None
+                    self.eg_on = False
             else:
-                print('mark3')
                 pass
         else:
-            print('mark4')
             after_sample_df = pd.DataFrame({'arm':self.arm_sequence[self.detected_stamp:], 
                         'observation':self.observation[self.detected_stamp:],
                         'total':10})
@@ -295,6 +295,7 @@ class IDS_pull():
                     #if tested significant -> update likelihood
                     #if tested non-significant -> keep exploitation
                     self.detected_stamp = None
+                    self.eg_on = False
                     print('demand shape does not match')
                     for i in range(self.update_L):
                         self.update_likelihood()
@@ -303,9 +304,13 @@ class IDS_pull():
                 #tested non-significant, alarm goes off
                 print('tested non-significant')
                 self.detected_stamp = None
+                self.eg_on = False
                 
     
     def detect(self):        
+        #trend 1:up, 0:down
+        expected_obs = (self.get_p_a_y() @ np.linspace(1, self.N-1, self.N))[int(self.arm_sequence[-1])]
+        self.detector['trend'].append(self.observation[-1] > expected_obs)
         #calculation
         arm_window = self.arm_sequence[-self.window_width:]
         obs_window = self.observation[-self.window_width:]
@@ -321,20 +326,26 @@ class IDS_pull():
 
             #testing
             if (up < 0) | (low > 0):
+                if np.mean(self.detector['trend'][-20:]) > 0.5:
+                    self.sign = 1
+                else:
+                    self.sign = -1
+
                 #the cooler prevent the detector to be alarm repeated in short period
-                if self.detector_cool > self.cool_time:
-                    if np.sum(self.detector['trend'][-10:]) > 5:
-                        self.sign = 1
-                    else:
-                        self.sign = -1
-                    #the stamp will trigger demand shape test, and test will be conducted when update_list
+                if self.detected_stamp is None:
+                    #will not triggered again if during near 20 rounds, but detector may tigger several time
+                    #before eg_on and shape discriminator
                     self.detected_stamp = self.t
                     self.generate_likelihood()
-                    print("Reward changed detected at time:", self.detected_stamp)
+                    print("Reward change detected at time:", self.detected_stamp)
                     print("Detected Sign:", self.sign)
-                    self.detector_cool = 0
+                elif self.t > (self.detected_stamp + self.cool_time):
+                    self.detected_stamp = self.t
+                    self.generate_likelihood()
+                    print("Reward change detected at time:", self.detected_stamp)
+                    print("Detected Sign:", self.sign)
                 else:
-                    self.detector_cool += 1
+                    print('Detector cooling')
         else:
             pass
 
@@ -612,7 +623,7 @@ class IDS_pull():
                 self.initiate_window_likelihood()
                 self.window_on = True
                 # generate once we finished collecting thetas
-                # self.generate_likelihood()
+                self.generate_likelihood()
             else:
                 pass
             
