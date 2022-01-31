@@ -237,7 +237,7 @@ class IDS_pull():
             detected_stamp_temp = self.detected_stamp
             self.detected_stamp = None
             print('eg triggered at ', self.t)
-            sampled_arm = np.percentile(np.arange(self.K), [20, 35, 50, 65, 80]).astype(int)
+            sampled_arm = np.percentile(np.arange(self.K), [10, 26, 42, 58, 74, 90]).astype(int)
             for arm in sampled_arm:
                 reaction = self.update_lists(arm, self.pricing_MAB)
                 self.all_posterior.append('eg_shape')
@@ -257,8 +257,10 @@ class IDS_pull():
         return pvalue
     
     def test_demand_shape(self):
-        unique_sammple_size = len(np.unique(self.arm_sequence[self.detected_stamp:]))
-        if unique_sammple_size < 4:
+        unique_sample_arm = np.unique(self.arm_sequence[self.detected_stamp:])
+        sample_range = max(unique_sample_arm) - min(unique_sample_arm)
+        unique_sammple_size = len(unique_sample_arm)
+        if (unique_sammple_size < 4) | (sample_range < self.K / 2):
             eg_on = self.eg_shape()
             if eg_on:
                 after_sample_df = pd.DataFrame({'arm':self.arm_sequence[self.detected_stamp:], 
@@ -276,7 +278,7 @@ class IDS_pull():
                     print('demand shape does not match')
                     for i in range(self.update_L):
                         self.update_likelihood()
-                        self.generate_likelihood()
+                    self.generate_likelihood()
                 else:
                     #tested non-significant, alarm goes off
                     print('tested non-significant')
@@ -290,16 +292,17 @@ class IDS_pull():
                         'total':10})
             demand_test_df = after_sample_df.groupby('arm')[['observation', 'total']].sum()
             demand_test_df['pvalue'] = demand_test_df.apply(self.get_pvalue, axis=1)
-            if any(demand_test_df.pvalue < (0.01 / demand_test_df.shape[0])):
-                    #test will only be conducted once each time after detector was triggered first
-                    #if tested significant -> update likelihood
-                    #if tested non-significant -> keep exploitation
-                    self.detected_stamp = None
-                    self.eg_on = False
-                    print('demand shape does not match')
-                    for i in range(self.update_L):
-                        self.update_likelihood()
-                        self.generate_likelihood()
+            print(demand_test_df.pvalue)
+            if any(demand_test_df.pvalue < (0.05 / demand_test_df.shape[0])):
+                #test will only be conducted once each time after detector was triggered first
+                #if tested significant -> update likelihood
+                #if tested non-significant -> keep exploitation
+                self.detected_stamp = None
+                self.eg_on = False
+                print('demand shape does not match')
+                for i in range(self.update_L):
+                    self.update_likelihood()
+                self.generate_likelihood()
             else:
                 #tested non-significant, alarm goes off
                 print('tested non-significant')
