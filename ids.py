@@ -56,6 +56,7 @@ class IDS_pull():
         self.detector = {'trend':[], 'upper_bound':[], 'lower_bound':[]}
         self.detector_cool = float('inf')
         self.detected_stamp = None
+        self.eg_on = False
 
         #Other
         self.store_IDS = True
@@ -228,7 +229,26 @@ class IDS_pull():
 
          ###Finally Insert New Window Here
         self.p_y[self.theta_window] = window_p_y
-        
+    
+    def eg_shape(self):
+        eg_on = np.random.choice([True, False], p=[0.1, 0.9])
+        self.eg_on = eg_on
+        if self.eg_on:
+            detected_stamp_temp = self.detected_stamp
+            self.detected_stamp = None
+            print('eg triggered at ', self.t)
+            sampled_arm = np.percentile(np.arange(self.K), [20, 35, 50, 65, 80]).astype(int)
+            for arm in sampled_arm:
+                reaction = self.update_lists(arm, self.pricing_MAB)
+                self.all_posterior.append('eg_shape')
+                if self.store_IDS:
+                    self.IDS_results['delta'].append('eg_shape')
+                    self.IDS_results['g'].append('eg_shape')
+                    self.IDS_results['IR'].append('eg_shape')
+            self.detected_stamp = detected_stamp_temp
+        else:
+            pass
+        return eg_on
 
     def get_pvalue(self, row):
         demand = self.p_a_y[int(row.name)] @ np.linspace(0, 10, 11) / 10
@@ -236,21 +256,54 @@ class IDS_pull():
         return pvalue
     
     def test_demand_shape(self):
-        after_sample_df = pd.DataFrame({'arm':self.arm_sequence[self.detected_stamp:], 
+        unique_sammple_size = len(np.unique(self.arm_sequence[self.detected_stamp:]))
+        if unique_sammple_size < 4:
+            print('mark1')
+            eg_on = self.eg_shape()
+            if eg_on:
+                print('mark2')
+                after_sample_df = pd.DataFrame({'arm':self.arm_sequence[self.detected_stamp:], 
                                         'observation':self.observation[self.detected_stamp:],
                                         'total':10})
-        demand_test_df = after_sample_df.groupby('arm')[['observation', 'total']].sum()
-        demand_test_df['pvalue'] = demand_test_df.apply(self.get_pvalue, axis=1)
-        if any(demand_test_df.pvalue < (0.01 / demand_test_df.shape[0])):
-            #test will only be conducted once each time after detector was triggered first
-            #if tested significant -> update likelihood
-            #if tested non-significant -> keep exploitation
-            self.detected_stamp = None
-            for i in range(self.update_L):
-                self.update_likelihood()
+                demand_test_df = after_sample_df.groupby('arm')[['observation', 'total']].sum()
+                demand_test_df['pvalue'] = demand_test_df.apply(self.get_pvalue, axis=1)
+                if any(demand_test_df.pvalue < (0.01 / demand_test_df.shape[0])):
+                    #test will only be conducted once each time after detector was triggered first
+                    #if tested significant -> update likelihood
+                    #if tested non-significant -> keep exploitation
+                    self.detected_stamp = None
+                    print('demand shape does not match')
+                    for i in range(self.update_L):
+                        self.update_likelihood()
+                        self.generate_likelihood()
+                else:
+                    #tested non-significant, alarm goes off
+                    print('tested non-significant')
+                    self.detected_stamp = None
+            else:
+                print('mark3')
+                pass
         else:
-            #tested non-significant, alarm goes off
-            self.detected_stamp = None
+            print('mark4')
+            after_sample_df = pd.DataFrame({'arm':self.arm_sequence[self.detected_stamp:], 
+                        'observation':self.observation[self.detected_stamp:],
+                        'total':10})
+            demand_test_df = after_sample_df.groupby('arm')[['observation', 'total']].sum()
+            demand_test_df['pvalue'] = demand_test_df.apply(self.get_pvalue, axis=1)
+            if any(demand_test_df.pvalue < (0.01 / demand_test_df.shape[0])):
+                    #test will only be conducted once each time after detector was triggered first
+                    #if tested significant -> update likelihood
+                    #if tested non-significant -> keep exploitation
+                    self.detected_stamp = None
+                    print('demand shape does not match')
+                    for i in range(self.update_L):
+                        self.update_likelihood()
+                        self.generate_likelihood()
+            else:
+                #tested non-significant, alarm goes off
+                print('tested non-significant')
+                self.detected_stamp = None
+                
     
     def detect(self):        
         #calculation
@@ -511,13 +564,22 @@ class IDS_pull():
         self.Cum_reward[arm] = self.Cum_reward[arm] + new_reward
         if self.detected_stamp:
             #detected_stamp means demand shape tested is on, we can set an EG here to explore specific samples for the test if need
-            self.test_demand_shape()
+            try:
+                if np.sum(np.dot(self.all_posterior[self.t], np.log(self.all_posterior[self.t] / self.all_posterior[self.t-1]))) < 0.001 & ~self.eg_on:
+                    #only started testing if p(theta) has converged
+                    self.test_demand_shape()
+                else:
+                    pass
+            except:
+                if ~self.eg_on:
+                    self.test_demand_shape()
+                else:
+                    pass
         self.t += 1
         
         return reaction
     
     def IDS(self, T, pricing_MAB, mode='mode1', update_style='expo', base=2, p=np.nan, p_y=np.nan, R=np.nan):
-        
         """
         Implementation of the Information Directed Sampling for Finite sets
         :param T: int, time horizon
