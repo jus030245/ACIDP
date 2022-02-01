@@ -9,7 +9,7 @@ from util import *
 
 
 class IDS_pull():
-    def __init__(self, price_list, N, start_L=2, update_L=2, simulate_time_initiate=1, simulate_time_update=1, window_width=300):
+    def __init__(self, price_list, N, start_L=2, update_L=2, simulate_time_initiate=1, simulate_time_update=1, eg_p=0.1, window_width=300):
         """
         :param price_list: np.array, an array of prices aka actions
         :param N: number of possible outcomes
@@ -28,6 +28,7 @@ class IDS_pull():
         self.simulate_time_initiate = simulate_time_initiate
         self.simulate_time_update = simulate_time_update
         self.window_width = window_width
+        self.eg_p = eg_p
         self.alpha_cs = 0.05
         self.alpha_bb = 0.01
         self.cool_time = 20
@@ -231,7 +232,7 @@ class IDS_pull():
         self.p_y[self.theta_window] = window_p_y
     
     def eg_shape(self):
-        eg_on = np.random.choice([True, False], p=[0.1, 0.9])
+        eg_on = np.random.choice([True, False], p=[self.eg_p, 1-self.eg_p])
         self.eg_on = eg_on
         if self.eg_on:
             detected_stamp_temp = self.detected_stamp
@@ -269,7 +270,7 @@ class IDS_pull():
                 demand_test_df = after_sample_df.groupby('arm')[['observation', 'total']].sum()
                 demand_test_df['pvalue'] = demand_test_df.apply(self.get_pvalue, axis=1)
                 print(demand_test_df.pvalue)
-                if any(demand_test_df.pvalue < (0.01 / demand_test_df.shape[0])):
+                if any(demand_test_df.pvalue < (0.05 / demand_test_df.shape[0])):
                     #test will only be conducted once each time after detector was triggered first
                     #if tested significant -> update likelihood
                     #if tested non-significant -> keep exploitation

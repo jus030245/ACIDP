@@ -67,7 +67,7 @@ class pricing_MAB():
         self.exp = exp
         self.t = 0
         self.T = T
-        if exp == 'exp6':
+        if exp == 'exp5':
             self.brownian = brownian(0)
             self.brownian_sequence = self.brownian.gen_sequence(T)
             
@@ -86,7 +86,7 @@ class pricing_MAB():
         
         elif self.exp == 'exp6':
             self.seg_means = np.random.beta(param1,param2,self.segments)
-            self.seg_means_2 = np.random.beta(param2,param1,self.segments)
+            self.seg_means_2 = np.random.beta(8,2,self.segments)
                     
     def customer_simulation(self, price, within=True):
         if self.exp == 'exp1':
@@ -119,12 +119,12 @@ class pricing_MAB():
             chosen_segments_index = np.random.choice(self.segments, self.update_freq, replace=True)
             chosen_segments = self.seg_means[chosen_segments_index]
             #set a constant 0.3 so that the sin function is bound by [-0.3,0.3]
-            customer_values = chosen_segments + np.random.normal(0, 0.1, self.update_freq) + 0.3 * np.sin(self.season)
+            customer_values = chosen_segments + np.random.normal(0, 0.1, self.update_freq) + 0.3 * np.sin(np.pi*4*self.t/self.T)
             reaction = (customer_values >= price)
             reward = price * np.sum(reaction)
             #update pi/(1/T/2) once at a time such that 8000 rounds will fulfill a complete cycle of sin from -1 to 1
             #complete two season in the experiment
-            self.t += (np.pi / (self.T/2))
+            self.t += 1
             if self.t == (self.T - 1):
                 self.reset_t()
 
@@ -154,7 +154,7 @@ class pricing_MAB():
             print("The true optimal arm in the rest is:", optimal_arm_2)
             return df, df_2
 
-        if self.exp == ['exp4', 'exp5']:
+        if self.exp in ['exp4', 'exp5']:
             df, optimal_arm, df_2, optimal_arm_2  = self.simulator_exp45()
             print("The highest true optimal is", optimal_arm)
             print("The lowest true optimal is:", optimal_arm_2)
@@ -246,7 +246,7 @@ class pricing_MAB():
             all_p_y = np.zeros(shape=(11))
             for rounds in range(simu):
                 chosen_segments_index = np.random.choice(self.segments, self.update_freq, replace=True)
-                chosen_segments = self.seg_means_2[chosen_segments_index]
+                chosen_segments = self.seg_means[chosen_segments_index]
                 customer_values = chosen_segments + np.random.normal(0, 0.1, self.update_freq) + lowest
                 reaction = (customer_values >= price)
                 reward = price * np.sum(reaction)
