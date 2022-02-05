@@ -102,11 +102,6 @@ class IDS_pull():
         the default prior for new likelihood is 0.8
         '''
         self.window_on = False
-        self.L += 1
-        #append initial p(theta) = 0.9 for new updated likelihood
-        #such that new likelihood will be weighted more
-        self.p = np.append(self.p,9)
-        self.p = self.p / self.p.sum()
         
         new_p_y = np.zeros(shape=(1,self.K,self.N))
         for arm, price in enumerate(self.price_list):
@@ -129,6 +124,11 @@ class IDS_pull():
                 
         self.p_y = np.append(self.p_y,new_p_y,axis=0)
         self.window_on = True
+        self.L += 1
+        #append initial p(theta) = 0.9 for new updated likelihood
+        #such that new likelihood will be weighted more
+        self.p = np.append(self.p,9)
+        self.p = self.p / self.p.sum()
         self.generate_likelihood()
         
     def initiate_window_likelihood(self):
@@ -532,6 +532,8 @@ class IDS_pull():
             self.p = self.p / self.p.sum()
         else:
             pass
+
+        self.all_posterior.append(self.p)
         
         if self.window_on:
             if self.update_during_exploit:
@@ -592,16 +594,17 @@ class IDS_pull():
         if self.detected_stamp:
             #detected_stamp means demand shape tested is on, we can set an EG here to explore specific samples for the test if need
             try:
-                if np.sum(np.dot(self.all_posterior[self.t], np.log(self.all_posterior[self.t] / self.all_posterior[self.t-1]))) < 0.001 & ~self.eg_on:
+                if (np.sum(np.dot(self.all_posterior[-1], np.log(self.all_posterior[-1] / self.all_posterior[-2]))) < 0.001) & ~self.eg_on:
                     #only started testing if p(theta) has converged
                     self.test_demand_shape()
                 else:
                     pass
             except:
-                if ~self.eg_on:
-                    self.test_demand_shape()
-                else:
-                    pass
+                pass
+                # if ~self.eg_on:
+                #     self.test_demand_shape()
+                # else:
+                #     pass
         self.t += 1
         
         return reaction
@@ -653,7 +656,7 @@ class IDS_pull():
                     arm = self.IDSAction(delta, g)
                     reaction = self.update_lists(arm, pricing_MAB)
                     self.update_prior(arm, reaction)
-                    self.all_posterior.append(self.p)
+                    # self.all_posterior.append(self.p)
                     self.IDS_rounds += 1
             
             elif update_style == 'fix':
@@ -666,7 +669,7 @@ class IDS_pull():
                     arm = self.IDSAction(delta, g)
                     reaction = self.update_lists(arm, pricing_MAB)
                     self.update_prior(arm, reaction)
-                    self.all_posterior.append(self.p)
+                    # self.all_posterior.append(self.p)
                     self.IDS_rounds += 1
             
             else:
@@ -675,7 +678,7 @@ class IDS_pull():
                     arm = self.IDSAction(delta, g)
                     reaction = self.update_lists(arm, pricing_MAB)
                     self.update_prior(arm, reaction)
-                    self.all_posterior.append(self.p)
+                    # self.all_posterior.append(self.p)
                     self.IDS_rounds += 1
                 
         return self.Cum_reward, self.Pull_times, self.reward, self.arm_sequence, np.array(self.all_posterior,dtype=object)
