@@ -7,7 +7,7 @@ from scipy import stats
 from util import *
 
 class UCBPI_pull():
-    def __init__(self, price_list, segments, c, bias, UCB1):
+    def __init__(self, price_list, segments, c, bias, UCB1, tuned=True):
         '''
         c is a hyperparameter constant, and is default to be 2
         '''
@@ -17,12 +17,19 @@ class UCBPI_pull():
         self.criteria = np.zeros(self.K)
         self.mean_profit = np.zeros(self.K)
         self.c = c
+        self.constant = c
         self.Cum_reward = np.zeros(self.K)
         self.Pull_times = np.zeros(self.K)
         self.reward = np.array([])
+        self.observation = []
+        for i in range(self.K):
+            self.observation.append([])
         self.arm_sequence = np.array([])
         self.seg_num = segments
         self.UCB1 = UCB1
+        self.tuned = tuned
+        if self.tuned:
+            self.V = np.ones(self.K)
         # seg_size can be adjusted to be unequal sizes
         self.seg_size = np.repeat(1/self.seg_num,self.seg_num)
         # Demand learning
@@ -39,11 +46,19 @@ class UCBPI_pull():
         The main strategy
         UCB original or amended
         '''
+        if self.tuned:
+            for i in range(self.K):
+                if len(self.observation[i]) == 0:
+                    self.V[i] = self.constant
+                else:
+                    self.V[i] = np.mean(np.array(self.observation[i]) ** 2) - np.mean(np.array(self.observation[i])) ** 2 + np.sqrt(np.log(self.t+1)*2/(self.Pull_times[i]+1))
+            self.c = np.minimum(self.V, 1/4)
+
         if self.UCB1:
-            self.criteria = (self.mean_profit + np.sqrt( self.c * (np.log(self.t+1)) / (self.Pull_times+1)))
+            self.criteria = (self.mean_profit + np.sqrt( self.constant * self.c * (np.log(self.t+1)) / (self.Pull_times+1)))
             
         else:
-            self.criteria = (self.mean_profit + self.price_list * np.sqrt( self.c * (np.log(self.t+1)) / (self.Pull_times+1)))
+            self.criteria = (self.mean_profit + self.price_list * self.delta_hat * np.sqrt( self.constant * self.c * (np.log(self.t+1)) / (self.Pull_times+1)))
         
         # Partial Intification
         if PI == True:
@@ -67,6 +82,7 @@ class UCBPI_pull():
         self.Pull_times[arm] = self.Pull_times[arm] + 1
         self.arm_sequence = np.append(self.arm_sequence, arm)
         self.reward = np.append(self.reward, new_reward)
+        self.observation[arm].append(sum(reaction))
         self.Cum_reward[arm] = self.Cum_reward[arm] + new_reward
         self.mean_profit[arm] = self.mean_profit[arm] + ( new_reward - self.mean_profit[arm] ) / self.Pull_times[arm]
         
@@ -139,7 +155,7 @@ class TS_pull():
                 post_sample[i] = np.random.binomial(10, post_theta[i], 1)
                 post_reward[i] = post_sample[i] * self.price_list[i]
                 
-        else:
+        if self.est == 'Sample':
             post_theta = np.zeros(self.K)
             post_sample = np.zeros(self.K)
             post_reward = np.zeros(self.K)
@@ -147,6 +163,9 @@ class TS_pull():
                 post_theta[i] = np.random.choice(a=self.theta, size=1, p=self.p[i])
                 post_sample[i] = np.random.binomial(10, post_theta[i], 1)
                 post_reward[i] = post_sample[i] * self.price_list[i]
+        
+        else:
+            post_reward = np.dot(self.p, self.theta) * self.price_list
                 
         
         arm = rd_argmax(post_reward)

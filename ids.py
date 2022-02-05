@@ -28,7 +28,7 @@ class IDS_pull():
         self.simulate_time_initiate = simulate_time_initiate
         self.simulate_time_update = simulate_time_update
         self.window_width = window_width
-        self.eg_p = eg_p
+        self.eg_p = [eg_p, eg_p*1e-1, eg_p*1e-2, eg_p*1e-3, eg_p*1e-4]
         self.alpha_cs = 0.05
         self.alpha_bb = 0.01
         self.cool_time = 20
@@ -58,6 +58,7 @@ class IDS_pull():
         self.detector_cool = float('inf')
         self.detected_stamp = None
         self.eg_on = False
+        self.eg_decay = 0
 
         #Other
         self.store_IDS = True
@@ -102,9 +103,9 @@ class IDS_pull():
         '''
         self.window_on = False
         self.L += 1
-        #append initial p(theta) = 0.8 for new updated likelihood
+        #append initial p(theta) = 0.9 for new updated likelihood
         #such that new likelihood will be weighted more
-        self.p = np.append(self.p,4)
+        self.p = np.append(self.p,9)
         self.p = self.p / self.p.sum()
         
         new_p_y = np.zeros(shape=(1,self.K,self.N))
@@ -128,6 +129,7 @@ class IDS_pull():
                 
         self.p_y = np.append(self.p_y,new_p_y,axis=0)
         self.window_on = True
+        self.generate_likelihood()
         
     def initiate_window_likelihood(self):
         cloned_theta = rd_argmax(self.p)
@@ -232,7 +234,7 @@ class IDS_pull():
         self.p_y[self.theta_window] = window_p_y
     
     def eg_shape(self):
-        eg_on = np.random.choice([True, False], p=[self.eg_p, 1-self.eg_p])
+        eg_on = np.random.choice([True, False], p=[self.eg_p[self.eg_decay], 1-self.eg_p[self.eg_decay]])
         self.eg_on = eg_on
         if self.eg_on:
             detected_stamp_temp = self.detected_stamp
@@ -279,12 +281,16 @@ class IDS_pull():
                     print('demand shape does not match')
                     for i in range(self.update_L):
                         self.update_likelihood()
-                    self.generate_likelihood()
                 else:
-                    #tested non-significant, alarm goes off
-                    print('tested non-significant')
-                    self.detected_stamp = None
+                    #tested non-significant
+                    #p(eg_on) decay after tested non-significant, refresh when detector alarmed again
+                    self.eg_decay += 1
+                    self.eg_decay = min(self.eg_decay, 4)
+                    print('tested non-significant', ', eg_p decayed to', self.eg_p[self.eg_decay])
+                    # self.detected_stamp = None
                     self.eg_on = False
+                    # we still let eg get triggered for a decaying probability, however, we shifted the test sample window to the untested ones
+                    self.detected_stamp = self.t
             else:
                 pass
         else:
@@ -305,9 +311,13 @@ class IDS_pull():
                     self.update_likelihood()
                 self.generate_likelihood()
             else:
-                #tested non-significant, alarm goes off
-                print('tested non-significant')
-                self.detected_stamp = None
+                #tested non-significant
+                self.eg_decay += 1
+                self.eg_decay = min(self.eg_decay, 4)
+                print('tested non-significant', ', eg_p decayed to', self.eg_p[self.eg_decay])
+                # if we have enough sample and tested non-significant
+                # we still let eg get triggered for a decaying probability, however, we shifted the test sample window to the untested ones
+                self.detected_stamp = self.t
                 self.eg_on = False
                 
     
@@ -339,11 +349,13 @@ class IDS_pull():
                 if self.detected_stamp is None:
                     #will not triggered again if during near 20 rounds, but detector may tigger several time
                     #before eg_on and shape discriminator
+                    self.eg_decay = 0
                     self.detected_stamp = self.t
                     self.generate_likelihood()
                     print("Reward change detected at time:", self.detected_stamp)
                     print("Detected Sign:", self.sign)
                 elif self.t > (self.detected_stamp + self.cool_time):
+                    self.eg_decay = 0
                     self.detected_stamp = self.t
                     self.generate_likelihood()
                     print("Reward change detected at time:", self.detected_stamp)
@@ -627,7 +639,7 @@ class IDS_pull():
                 self.initiate_window_likelihood()
                 self.window_on = True
                 # generate once we finished collecting thetas
-                self.generate_likelihood()
+                # self.generate_likelihood()
             else:
                 pass
             

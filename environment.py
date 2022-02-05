@@ -86,7 +86,7 @@ class pricing_MAB():
         
         elif self.exp == 'exp6':
             self.seg_means = np.random.beta(param1,param2,self.segments)
-            self.seg_means_2 = np.random.beta(8,2,self.segments)
+            self.seg_means_2 = np.random.beta(0.9, 0.5,self.segments)
                     
     def customer_simulation(self, price, within=True):
         if self.exp == 'exp1':
