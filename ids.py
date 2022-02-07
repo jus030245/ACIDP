@@ -9,7 +9,7 @@ from util import *
 
 
 class IDS_pull():
-    def __init__(self, price_list, N, start_L=2, update_L=2, simulate_time_initiate=1, simulate_time_update=1, eg_p=0.1, window_width=300):
+    def __init__(self, price_list, N, start_L=2, update_L=2, simulate_time_initiate=1, simulate_time_update=1, eg_p=0.1, window_width=300, update_during_exploit=False):
         """
         :param price_list: np.array, an array of prices aka actions
         :param N: number of possible outcomes
@@ -32,7 +32,7 @@ class IDS_pull():
         self.alpha_cs = 0.05
         self.alpha_bb = 0.01
         self.cool_time = 20
-        self.update_during_exploit = False
+        self.update_during_exploit = update_during_exploit
         
         #Initiate other parameters
         self.set_attribute()

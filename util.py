@@ -98,3 +98,100 @@ def harmonic_KL(vector1, vector2):
     KL_2 = np.sum(np.dot(vector2, np.log(vector2 / vector1)))
     harmonic = 1 / (1/KL_1 + 1/KL_2)
     return harmonic
+
+def draw_exp_graph(IDS_1, IDS_2, IDS_3, IDST_1, UCB_1, UCB_2, UCBT, UCBPI, TS, EG_1, EG_2, EG_3, title):
+    
+    IDS_1_mean = IDS_1.mean()
+    IDS_2_mean = IDS_2.mean()
+    IDS_3_mean = IDS_3.mean()
+    IDST_1_mean = IDST_1.mean()
+    UCB_1_mean = UCB_1.mean()
+    UCB_2_mean =UCB_2.mean()
+    UCBT_mean = UCBT.mean()
+    UCBPI_mean = UCBPI.mean()
+    TS_mean = TS.mean()
+    EG_1_mean = EG_1.mean()
+    EG_2_mean = EG_2.mean()
+    EG_3_mean = EG_3.mean()
+    
+    T = np.arange(EG_1.shape[1])
+    trial = EG_1.shape[0]
+    
+    plt.figure(figsize=(30,20))
+    sns.set(font_scale=2, style='white')
+    
+    plt.plot(EG_1_mean,alpha=1,color='#000000', linestyle='-')
+    plt.fill_between(T, EG_1.min(), EG_1.max(), color='#000000', alpha=0.1)
+    
+    plt.plot(EG_2_mean,alpha=1,color='#000000', linestyle='-.')
+    plt.fill_between(T, EG_2.min(), EG_2.max(), color='#000000', alpha=0.1)
+    
+    plt.plot(EG_3_mean,alpha=1,color='#000000', linestyle='--')
+    plt.fill_between(T, EG_3.min(), EG_3.max(), color='#000000', alpha=0.1)
+    
+    plt.plot(TS_mean,alpha=1,color='#666666', linestyle='-')
+    plt.fill_between(T, TS.min(), TS.max(), color='#666666', alpha=0.2)
+    
+    plt.plot(UCB_1_mean,alpha=1,color='#666600', linestyle='-')
+    plt.fill_between(T, UCB_1.min(), UCB_1.max(), color='#666600', alpha=0.2)
+    
+    plt.plot(UCB_2_mean,alpha=1,color='#666600', linestyle='-.')
+    plt.fill_between(T, UCB_2.min(), UCB_2.max(), color='#666600', alpha=0.2)
+    
+    plt.plot(UCBT_mean,alpha=1,color='#666600', linestyle='--')
+    plt.fill_between(T, UCBT.min(), UCBT.max(), color='#666600', alpha=0.2)
+
+    plt.plot(UCBPI_mean,alpha=1,color='#666600', linestyle=':')
+    plt.fill_between(T, UCBPI.min(), UCBPI.max(), color='#666600', alpha=0.2)
+
+    plt.plot(IDS_1_mean,alpha=1,color='#FF6666', linestyle='-')
+    plt.fill_between(T, IDS_1.min(), IDS_1.max(), color='#FF6666', alpha=0.2)
+
+    plt.plot(IDS_2_mean,alpha=1,color='#FF6666', linestyle='-.')
+    plt.fill_between(T, IDS_2.min(), IDS_2.max(), color='#FF6666', alpha=0.2)
+
+    plt.plot(IDS_3_mean,alpha=1,color='#FF6666', linestyle='--')
+    plt.fill_between(T, IDS_3.min(), IDS_3.max(), color='#FF6666', alpha=0.2)
+
+    plt.plot(IDST_1_mean,alpha=1,color='#FF6666', linestyle=':')
+    plt.fill_between(T, IDST_1.min(), IDST_1.max(), color='#FF6666', alpha=0.2)
+    
+    plt.legend(['EG_1', 'EG_2', 'EG_3', 'TS', 'UCB1', 'UCB2', 'UCB-tuned', 'UCBPI', 'IDS_1 L=2, n=1', 'IDS2 L=4, n=1', 'IDS L=2, n=2', 'IDS Theta'],
+              bbox_to_anchor=(0.85, -0.05), ncol=6, fancybox=True)
+    plt.title(title)
+    plt.xlabel('Horizon')
+    plt.ylabel('Cumulative Reward')
+    plt.show()
+
+def draw_arm(IDS, TS, UCB, EG):
+    sns.set(font_scale=1.5, style='white')
+    figure, axis = plt.subplots(2, 2, figsize=(20,12))
+
+    trial = EG.shape[0]
+    X = np.arange(EG.shape[1])
+    for i in range(trial):
+        axis[0, 0].scatter(x=X, y=IDS.iloc[i], alpha=0.1, s=10, color='#FF6666')
+    axis[0, 0].set_ylim([-1, 20])
+    axis[0, 0].set_ylabel('Pulled Arms')
+    axis[0, 0].set_title('IDS')
+
+    for i in range(trial):
+        axis[0, 1].scatter(x=X, y=TS.iloc[i], alpha=0.1, s=10, color='#666666')
+    axis[0, 1].set_ylim([-1, 20])
+    axis[0, 1].set_ylabel('Pulled Arms')
+    axis[0, 1].set_title('TS')
+
+    for i in range(trial):
+        axis[1, 0].scatter(x=X, y=UCB.iloc[i], alpha=0.1, s=10, color='#666600')
+    axis[1, 0].set_ylim([-1, 20])
+    axis[1, 0].set_ylabel('Pulled Arms')
+    axis[1, 0].set_title('UCB')
+
+    for i in range(trial):
+        axis[1, 1].scatter(x=X, y=EG.iloc[i], alpha=0.1, s=10, color='#996633')
+    axis[1, 1].set_ylim([-1, 20])
+    axis[1, 1].set_ylabel('Pulled Arms')
+    axis[1, 1].set_title('EG')
+
+    figure.text(0.5, 0.05, 'Horizon')
+    plt.show()

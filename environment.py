@@ -81,8 +81,8 @@ class pricing_MAB():
             self.seg_means_2 = np.random.beta(param1,param2,self.segments) + shift
 
         elif self.exp == 'exp3':
-            self.seg_means = np.random.beta(param1,param2,self.segments)
-            self.seg_means_2 = np.random.beta(param1,param2,self.segments) - shift
+            self.seg_means = np.random.beta(param1,param2,self.segments) + shift
+            self.seg_means_2 = np.random.beta(param1,param2,self.segments)
         
         elif self.exp == 'exp6':
             self.seg_means = np.random.beta(param1,param2,self.segments)
