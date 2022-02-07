@@ -121,13 +121,13 @@ def draw_exp_graph(IDS_1, IDS_2, IDS_3, IDST_1, UCB_1, UCB_2, UCBT, UCBPI, TS, E
     sns.set(font_scale=2, style='white')
     
     plt.plot(EG_1_mean,alpha=1,color='#000000', linestyle='-')
-    plt.fill_between(T, EG_1.min(), EG_1.max(), color='#000000', alpha=0.1)
+    plt.fill_between(T, EG_1.min(), EG_1.max(), color='#000000', alpha=0.2)
     
     plt.plot(EG_2_mean,alpha=1,color='#000000', linestyle='-.')
-    plt.fill_between(T, EG_2.min(), EG_2.max(), color='#000000', alpha=0.1)
+    plt.fill_between(T, EG_2.min(), EG_2.max(), color='#000000', alpha=0.2)
     
     plt.plot(EG_3_mean,alpha=1,color='#000000', linestyle='--')
-    plt.fill_between(T, EG_3.min(), EG_3.max(), color='#000000', alpha=0.1)
+    plt.fill_between(T, EG_3.min(), EG_3.max(), color='#000000', alpha=0.2)
     
     plt.plot(TS_mean,alpha=1,color='#666666', linestyle='-')
     plt.fill_between(T, TS.min(), TS.max(), color='#666666', alpha=0.2)
@@ -195,3 +195,21 @@ def draw_arm(IDS, TS, UCB, EG):
 
     figure.text(0.5, 0.05, 'Horizon')
     plt.show()
+
+def generator_demo(IDS, t, size=10000):
+    try:
+        L = IDS.all_posterior[t].size
+        posterior = IDS.all_posterior[t][:L]
+        q = IDS.p_y[:L]
+        p_a_y = np.zeros(shape=(IDS.K, IDS.N))
+        for action in range(IDS.K):
+            p_a_y[action] = posterior.reshape(1, L) @ q[:,action,:]
+        demand = p_a_y @ np.linspace(0, IDS.N-1, IDS.N) / 10
+        demand = np.sort(demand.reshape(1, IDS.K)[0])[::-1]
+        est_value_pmf = (demand - np.roll(demand, shift=-1))[:-1]
+        est_value_pmf = est_value_pmf / est_value_pmf.sum()
+        customer_value = (np.random.choice(a=IDS.price_list_simu, size= size, p=est_value_pmf) + 
+                        np.random.normal(0, IDS.price_interval, size))
+    except:
+        print('Chosen T Is Under Exploration')
+    return demand, est_value_pmf, customer_value

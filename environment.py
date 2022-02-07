@@ -257,3 +257,10 @@ class pricing_MAB():
         optimal_arm_2 = np.argmax(df_2.groupby('price')['reward'].mean())
             
         return df, optimal_arm, df_2, optimal_arm_2
+
+
+def truevalue_generator(segments_mean, size=10000):
+    chosen_segments_index = np.random.choice(segments_mean.size, size, replace=True)
+    chosen_segments = segments_mean[chosen_segments_index]
+    customer_values = chosen_segments + np.random.normal(0, 0.1, size)
+    return customer_values
