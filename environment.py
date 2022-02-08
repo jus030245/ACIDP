@@ -125,7 +125,7 @@ class pricing_MAB():
             #update pi/(1/T/2) once at a time such that 8000 rounds will fulfill a complete cycle of sin from -1 to 1
             #complete two season in the experiment
             self.t += 1
-            if self.t == (self.T - 1):
+            if self.t == self.T:
                 self.reset_t()
 
         elif self.exp == 'exp5':
@@ -135,7 +135,7 @@ class pricing_MAB():
             reaction = (customer_values >= price)
             reward = price * np.sum(reaction)
             self.t += 1
-            if self.t == (self.T - 1):
+            if self.t == self.T:
                 self.reset_t()
         return reward, chosen_segments_index, reaction
         

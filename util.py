@@ -213,3 +213,180 @@ def generator_demo(IDS, t, size=10000):
     except:
         print('Chosen T Is Under Exploration')
     return demand, est_value_pmf, customer_value
+
+
+def get_low(optimal_reward, df):
+    return (optimal_reward - df.max()).values[0]
+def get_high(optimal_reward, df):
+    return (optimal_reward - df.min()).values[0]
+
+def draw_regret(optimal_reward, IDS_1, IDS_2, IDS_3, IDST_1, UCB_1, UCB_2, UCBT, UCBPI, TS, EG_1, EG_2, EG_3, title, bounds=True):
+    
+    IDS_1_mean = (optimal_reward - IDS_1.mean()).values[0]
+    IDS_2_mean = (optimal_reward - IDS_2.mean()).values[0]
+    IDS_3_mean = (optimal_reward - IDS_3.mean()).values[0]
+    IDST_1_mean = (optimal_reward - IDST_1.mean()).values[0]
+    UCB_1_mean = (optimal_reward - UCB_1.mean()).values[0]
+    UCB_2_mean = (optimal_reward - UCB_2.mean()).values[0]
+    UCBT_mean = (optimal_reward - UCBT.mean()).values[0]
+    UCBPI_mean = (optimal_reward - UCBPI.mean()).values[0]
+    TS_mean = (optimal_reward - TS.mean()).values[0]
+    EG_1_mean = (optimal_reward - EG_1.mean()).values[0]
+    EG_2_mean = (optimal_reward - EG_2.mean()).values[0]
+    EG_3_mean = (optimal_reward - EG_3.mean()).values[0]
+    
+    T = np.arange(EG_1.shape[1])
+    trial = EG_1.shape[0]
+    
+    plt.figure(figsize=(30,20))
+    sns.set(font_scale=2, style='white')
+    
+    plt.plot(EG_1_mean,alpha=1,color='#000000', linestyle='-')
+    plt.plot(EG_2_mean,alpha=1,color='#000000', linestyle='-.')    
+    plt.plot(EG_3_mean,alpha=1,color='#000000', linestyle='--')
+    
+    plt.plot(TS_mean,alpha=1,color='#666666', linestyle='-')
+    
+    plt.plot(UCB_1_mean,alpha=1,color='#666600', linestyle='-')
+    plt.plot(UCB_2_mean,alpha=1,color='#666600', linestyle='-.')
+    plt.plot(UCBT_mean,alpha=1,color='#666600', linestyle='--')
+    plt.plot(UCBPI_mean,alpha=1,color='#666600', linestyle=':')
+
+
+    plt.plot(IDS_1_mean,alpha=1,color='#FF6666', linestyle='-')
+    plt.plot(IDS_2_mean,alpha=1,color='#FF6666', linestyle='-.')
+    plt.plot(IDS_3_mean,alpha=1,color='#FF6666', linestyle='--')
+    plt.plot(IDST_1_mean,alpha=1,color='#FF6666', linestyle=':')
+
+    
+    if bounds:
+        plt.fill_between(T, get_low(optimal_reward, EG_1), get_high(optimal_reward, EG_1), color='#000000', alpha=0.1)
+        plt.fill_between(T, get_low(optimal_reward, EG_2), get_high(optimal_reward, EG_2), color='#000000', alpha=0.1)
+        plt.fill_between(T, get_low(optimal_reward, EG_3), get_high(optimal_reward, EG_3), color='#000000', alpha=0.1)
+        plt.fill_between(T, get_low(optimal_reward, TS), get_high(optimal_reward, TS), color='#666666', alpha=0.1)
+        plt.fill_between(T, get_low(optimal_reward, UCB_1), get_high(optimal_reward, UCB_1), color='#666600', alpha=0.2)
+        plt.fill_between(T, get_low(optimal_reward, UCB_2), get_high(optimal_reward, UCB_2), color='#666600', alpha=0.2)
+        plt.fill_between(T, get_low(optimal_reward, UCBT), get_high(optimal_reward, UCBT), color='#666600', alpha=0.2)
+        plt.fill_between(T, get_low(optimal_reward, UCBPI), get_high(optimal_reward, UCBPI), color='#666600', alpha=0.2)
+        plt.fill_between(T, get_low(optimal_reward, IDS_1), get_high(optimal_reward, IDS_1), color='#FF6666', alpha=0.2)
+        plt.fill_between(T, get_low(optimal_reward, IDS_2), get_high(optimal_reward, IDS_2), color='#FF6666', alpha=0.2)
+        plt.fill_between(T, get_low(optimal_reward, IDS_3), get_high(optimal_reward, IDS_3), color='#FF6666', alpha=0.2)
+        plt.fill_between(T, get_low(optimal_reward, IDST_1), get_high(optimal_reward, IDST_1), color='#FF6666', alpha=0.2)
+
+        
+        
+        
+    plt.legend(['EG_1', 'EG_2', 'EG_3', 'TS', 'UCB1', 'UCB2', 'UCB-tuned',
+                'UCBPI', 'IDS_1 L=2, n=1', 'IDS2 L=4, n=1', 'IDS L=2, n=2',
+                'IDS Theta'],
+              bbox_to_anchor=(0.85, -0.05), ncol=6, fancybox=True)
+    plt.title(title)
+    plt.xlabel('Horizon')
+    plt.ylabel('Cumulative Regret')
+    plt.show()
+
+def draw_regret_6(optimal_reward, IDS_1, IDS_2, IDS_3, IDST_1, IDSN, IDSW, UCB_1, UCB_2, UCBT, UCBPI, TS, EG_1, EG_2, EG_3, title, bounds=True):
+    
+    IDS_1_mean = (optimal_reward - IDS_1.mean()).values[0]
+    IDS_2_mean = (optimal_reward - IDS_2.mean()).values[0]
+    IDS_3_mean = (optimal_reward - IDS_3.mean()).values[0]
+    IDST_1_mean = (optimal_reward - IDST_1.mean()).values[0]
+    IDSN_mean = (optimal_reward - IDSN.mean()).values[0]
+    IDSW_mean = (optimal_reward - IDSW.mean()).values[0]
+    UCB_1_mean = (optimal_reward - UCB_1.mean()).values[0]
+    UCB_2_mean = (optimal_reward - UCB_2.mean()).values[0]
+    UCBT_mean = (optimal_reward - UCBT.mean()).values[0]
+    UCBPI_mean = (optimal_reward - UCBPI.mean()).values[0]
+    TS_mean = (optimal_reward - TS.mean()).values[0]
+    EG_1_mean = (optimal_reward - EG_1.mean()).values[0]
+    EG_2_mean = (optimal_reward - EG_2.mean()).values[0]
+    EG_3_mean = (optimal_reward - EG_3.mean()).values[0]
+    
+    T = np.arange(EG_1.shape[1])
+    trial = EG_1.shape[0]
+    
+    plt.figure(figsize=(30,20))
+    sns.set(font_scale=2, style='white')
+    
+    plt.plot(EG_1_mean,alpha=1,color='#000000', linestyle='-')
+    plt.plot(EG_2_mean,alpha=1,color='#000000', linestyle='-.')    
+    plt.plot(EG_3_mean,alpha=1,color='#000000', linestyle='--')
+    
+    plt.plot(TS_mean,alpha=1,color='#666666', linestyle='-')
+    
+    plt.plot(UCB_1_mean,alpha=1,color='#666600', linestyle='-')
+    plt.plot(UCB_2_mean,alpha=1,color='#666600', linestyle='-.')
+    plt.plot(UCBT_mean,alpha=1,color='#666600', linestyle='--')
+    plt.plot(UCBPI_mean,alpha=1,color='#666600', linestyle=':')
+
+
+    plt.plot(IDS_1_mean,alpha=1,color='#FF6666', linestyle='-')
+    plt.plot(IDS_2_mean,alpha=1,color='#FF6666', linestyle='-.')
+    plt.plot(IDS_3_mean,alpha=1,color='#FF6666', linestyle='--')
+    plt.plot(IDST_1_mean,alpha=1,color='#FF6666', linestyle=':')
+    plt.plot(IDSN_mean,alpha=1,color='#0000FF', linestyle='-')
+    plt.plot(IDSW_mean,alpha=1,color='#FFA500', linestyle='-')
+    
+    if bounds:
+        plt.fill_between(T, get_low(optimal_reward, EG_1), get_high(optimal_reward, EG_1), color='#000000', alpha=0.1)
+        plt.fill_between(T, get_low(optimal_reward, EG_2), get_high(optimal_reward, EG_2), color='#000000', alpha=0.1)
+        plt.fill_between(T, get_low(optimal_reward, EG_3), get_high(optimal_reward, EG_3), color='#000000', alpha=0.1)
+        plt.fill_between(T, get_low(optimal_reward, TS), get_high(optimal_reward, TS), color='#666666', alpha=0.1)
+        plt.fill_between(T, get_low(optimal_reward, UCB_1), get_high(optimal_reward, UCB_1), color='#666600', alpha=0.2)
+        plt.fill_between(T, get_low(optimal_reward, UCB_2), get_high(optimal_reward, UCB_2), color='#666600', alpha=0.2)
+        plt.fill_between(T, get_low(optimal_reward, UCBT), get_high(optimal_reward, UCBT), color='#666600', alpha=0.2)
+        plt.fill_between(T, get_low(optimal_reward, UCBPI), get_high(optimal_reward, UCBPI), color='#666600', alpha=0.2)
+        plt.fill_between(T, get_low(optimal_reward, IDS_1), get_high(optimal_reward, IDS_1), color='#FF6666', alpha=0.2)
+        plt.fill_between(T, get_low(optimal_reward, IDS_2), get_high(optimal_reward, IDS_2), color='#FF6666', alpha=0.2)
+        plt.fill_between(T, get_low(optimal_reward, IDS_3), get_high(optimal_reward, IDS_3), color='#FF6666', alpha=0.2)
+        plt.fill_between(T, get_low(optimal_reward, IDST_1), get_high(optimal_reward, IDST_1), color='#FF6666', alpha=0.2)
+        plt.fill_between(T, get_low(optimal_reward, IDSN), get_high(optimal_reward, IDSN), color='#0000FF', alpha=0.2)
+        plt.fill_between(T, get_low(optimal_reward, IDSW), get_high(optimal_reward, IDSW), color='#FFA500', alpha=0.2)
+        
+        
+        
+    plt.legend(['EG_1', 'EG_2', 'EG_3', 'TS', 'UCB1', 'UCB2', 'UCB-tuned',
+                'UCBPI', 'IDS_1 L=2, n=1', 'IDS2 L=4, n=1', 'IDS L=2, n=2',
+                'IDS Theta', 'IDS without Transferability Test', 'IDS widnow Likelihood'],
+              bbox_to_anchor=(1, -0.05), ncol=7, fancybox=True)
+    plt.title(title)
+    plt.xlabel('Horizon')
+    plt.ylabel('Cumulative Regret')
+    plt.show()
+
+def draw_arm_withopt(IDS, TS, UCB, EG, optimal_arm):
+    sns.set(font_scale=1.5, style='white')
+    figure, axis = plt.subplots(2, 2, figsize=(20,12))
+
+    trial = EG.shape[0]
+    X = np.arange(EG.shape[1])
+    for i in range(trial):
+        axis[0, 0].scatter(x=X, y=IDS.iloc[i], alpha=0.1, s=10, color='#FF6666')
+    axis[0, 0].plot(optimal_arm_per, color='r', linewidth=1, linestyle='--')
+    axis[0, 0].set_ylim([-1, 20])
+    axis[0, 0].set_ylabel('Pulled Arms')
+    axis[0, 0].set_title('IDS')
+
+    for i in range(trial):
+        axis[0, 1].scatter(x=X, y=TS.iloc[i], alpha=0.1, s=10, color='#666666')
+    axis[0, 1].plot(optimal_arm_per, color='r', linewidth=1, linestyle='--')
+    axis[0, 1].set_ylim([-1, 20])
+    axis[0, 1].set_ylabel('Pulled Arms')
+    axis[0, 1].set_title('TS')
+
+    for i in range(trial):
+        axis[1, 0].scatter(x=X, y=UCB.iloc[i], alpha=0.1, s=10, color='#666600')
+    axis[1, 0].plot(optimal_arm_per, color='r', linewidth=1, linestyle='--')
+    axis[1, 0].set_ylim([-1, 20])
+    axis[1, 0].set_ylabel('Pulled Arms')
+    axis[1, 0].set_title('UCB')
+
+    for i in range(trial):
+        axis[1, 1].scatter(x=X, y=EG.iloc[i], alpha=0.1, s=10, color='#996633')
+    axis[1, 1].plot(optimal_arm_per, color='r', linewidth=1, linestyle='--')
+    axis[1, 1].set_ylim([-1, 20])
+    axis[1, 1].set_ylabel('Pulled Arms')
+    axis[1, 1].set_title('EG')
+
+    figure.text(0.5, 0.05, 'Horizon')
+    plt.show()
