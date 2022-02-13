@@ -158,7 +158,7 @@ class IDS_pull():
     def renew_window_likelihood(self):
         '''
         take place after update prior
-        Step0. Fix the number of the timewindow likelihood
+        Step0. Fix the index of the timewindow likelihood
         Step1. synthesize a new likelihood using current belief on demand
         Step2. Update this likelihood with old likelihood
         Step3. Adjust the the demand for non-decreasing property
