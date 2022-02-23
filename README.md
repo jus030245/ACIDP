@@ -1,1 +1,1 @@
-# Dynamic_Pricing_IDS
+This project is the impplementation and experiments of ACIDP in the paper "Non-stationary Dynamic Pricing via Actor-Critic Information Directed Pricing". Update versions will be released on ACIDP after peer review.
