@@ -440,3 +440,135 @@ def draw_arm_withopt_6(IDSN, IDSW, IDS, TS, UCB, EG, optimal_arm):
 
     figure.text(0.5, 0.05, 'Horizon')
     plt.show()
+
+# Color change version
+# def draw_regret(optimal_reward, groups, title, bounds=True):
+    
+#     IDS_1_mean = (optimal_reward - groups.loc['IDS_1'].values).values[0]
+#     IDS_2_mean = (optimal_reward - groups.loc['IDS_2'].values).values[0]
+#     IDS_3_mean = (optimal_reward - groups.loc['IDS_3'].values).values[0]
+#     IDST_1_mean = (optimal_reward - groups.loc['IDST_1'].values).values[0]
+#     UCB_1_mean = (optimal_reward - groups.loc['UCB_1'].values).values[0]
+#     UCB_2_mean = (optimal_reward - groups.loc['UCB_2'].values).values[0]
+#     UCBT_mean = (optimal_reward - groups.loc['UCBT'].values).values[0]
+#     UCBPI_mean = (optimal_reward - groups.loc['UCBPI'].values).values[0]
+#     TS_mean = (optimal_reward - groups.loc['TS'].values).values[0]
+#     EG_1_mean = (optimal_reward - groups.loc['EG_1'].values).values[0]
+#     EG_2_mean = (optimal_reward - groups.loc['EG_2'].values).values[0]
+#     EG_3_mean = (optimal_reward - groups.loc['EG_3'].values).values[0]
+    
+#     T = np.arange(2000)
+#     trial = 10
+    
+#     plt.figure(figsize=(30,20))
+#     sns.set(font_scale=2, style='white')
+    
+#     plt.plot(EG_1_mean,alpha=1,color='#979DAC', linestyle='--', linewidth=3)
+#     plt.plot(EG_2_mean,alpha=1,color='#7D8597', linestyle='--', linewidth=3)
+#     plt.plot(EG_3_mean,alpha=1,color='#5C677D', linestyle='--', linewidth=3)
+#     plt.plot(TS_mean,alpha=1,color='#33415C', linestyle='--', linewidth=3)
+    
+#     plt.plot(UCB_1_mean,alpha=1,color='#979DAC', linestyle=':', linewidth=3)
+#     plt.plot(UCB_2_mean,alpha=1,color='#7D8597', linestyle=':', linewidth=3)
+#     plt.plot(UCBT_mean,alpha=1,color='#5C677D', linestyle=':', linewidth=3)
+#     plt.plot(UCBPI_mean,alpha=1,color='#33415C', linestyle=':', linewidth=3)
+
+
+#     plt.plot(IDS_1_mean,alpha=1,color='#FF0000', linestyle='-', linewidth=4)
+#     plt.plot(IDS_2_mean,alpha=1,color='#FF8700', linestyle='-', linewidth=4)
+#     plt.plot(IDS_3_mean,alpha=1,color='#FFD300', linestyle='-', linewidth=4)
+#     plt.plot(IDST_1_mean,alpha=1,color='#FF8FA3', linestyle='-', linewidth=4)
+
+    
+#     if bounds:
+#         plt.fill_between(T, get_low(optimal_reward, EG_1), get_high(optimal_reward, EG_1), color='#000000', alpha=0.1)
+#         plt.fill_between(T, get_low(optimal_reward, EG_2), get_high(optimal_reward, EG_2), color='#000000', alpha=0.1)
+#         plt.fill_between(T, get_low(optimal_reward, EG_3), get_high(optimal_reward, EG_3), color='#000000', alpha=0.1)
+#         plt.fill_between(T, get_low(optimal_reward, TS), get_high(optimal_reward, TS), color='#666666', alpha=0.05)
+#         plt.fill_between(T, get_low(optimal_reward, UCB_1), get_high(optimal_reward, UCB_1), color='#666600', alpha=0.05)
+#         plt.fill_between(T, get_low(optimal_reward, UCB_2), get_high(optimal_reward, UCB_2), color='#666600', alpha=0.05)
+#         plt.fill_between(T, get_low(optimal_reward, UCBT), get_high(optimal_reward, UCBT), color='#666600', alpha=0.05)
+#         plt.fill_between(T, get_low(optimal_reward, UCBPI), get_high(optimal_reward, UCBPI), color='#666600', alpha=0.05)
+#         plt.fill_between(T, get_low(optimal_reward, IDS_1), get_high(optimal_reward, IDS_1), color='#FF6666', alpha=0.1)
+#         plt.fill_between(T, get_low(optimal_reward, IDS_2), get_high(optimal_reward, IDS_2), color='#FF6666', alpha=0.1)
+#         plt.fill_between(T, get_low(optimal_reward, IDS_3), get_high(optimal_reward, IDS_3), color='#FF6666', alpha=0.1)
+#         plt.fill_between(T, get_low(optimal_reward, IDST_1), get_high(optimal_reward, IDST_1), color='#FF6666', alpha=0.1)
+
+        
+        
+        
+#     plt.legend(['EG $ε$=0.05', 'EG $ε$=0.1', 'EG $ε$=0.15', 'TS', 'UCB c=1', 'UCB c=2', 'UCB-tuned',
+#                 'UCBPI', 'ACIDP L=2, n=1', 'ACIDP L=4, n=1', 'ACIDP L=2, n=2',
+#                 'ACIDP-$θ$ L=2, n=1'],
+#               bbox_to_anchor=(0.9, -0.05), ncol=6, fancybox=True)
+#     plt.title(title)
+#     plt.xlabel('Horizon')
+#     plt.ylabel('Cumulative Regret')
+#     plt.show()
+
+# def draw_regret(optimal_reward, groups, title, bounds=True):
+    
+#     IDS_1_mean = (optimal_reward - groups.loc['IDS_1'].values).values[0]
+#     IDS_2_mean = (optimal_reward - groups.loc['IDS_2'].values).values[0]
+#     IDS_3_mean = (optimal_reward - groups.loc['IDS_3'].values).values[0]
+#     IDST_1_mean = (optimal_reward - groups.loc['IDST_1'].values).values[0]
+#     IDSN_mean = (optimal_reward - groups.loc['IDSN'].values).values[0]
+#     IDSW_mean = (optimal_reward - groups.loc['IDSW'].values).values[0]
+#     UCB_1_mean = (optimal_reward - groups.loc['UCB_1'].values).values[0]
+#     UCB_2_mean = (optimal_reward - groups.loc['UCB_2'].values).values[0]
+#     UCBT_mean = (optimal_reward - groups.loc['UCBT'].values).values[0]
+#     UCBPI_mean = (optimal_reward - groups.loc['UCBPI'].values).values[0]
+#     TS_mean = (optimal_reward - groups.loc['TS'].values).values[0]
+#     EG_1_mean = (optimal_reward - groups.loc['EG_1'].values).values[0]
+#     EG_2_mean = (optimal_reward - groups.loc['EG_2'].values).values[0]
+#     EG_3_mean = (optimal_reward - groups.loc['EG_3'].values).values[0]
+    
+#     T = np.arange(2000)
+#     trial = 10
+    
+#     plt.figure(figsize=(30,20))
+#     sns.set(font_scale=2, style='white')
+    
+#     plt.plot(EG_1_mean,alpha=1,color='#979DAC', linestyle='--', linewidth=3)
+#     plt.plot(EG_2_mean,alpha=1,color='#7D8597', linestyle='--', linewidth=3)
+#     plt.plot(EG_3_mean,alpha=1,color='#5C677D', linestyle='--', linewidth=3)
+#     plt.plot(TS_mean,alpha=1,color='#33415C', linestyle='--', linewidth=3)
+    
+#     plt.plot(UCB_1_mean,alpha=1,color='#979DAC', linestyle=':', linewidth=3)
+#     plt.plot(UCB_2_mean,alpha=1,color='#7D8597', linestyle=':', linewidth=3)
+#     plt.plot(UCBT_mean,alpha=1,color='#5C677D', linestyle=':', linewidth=3)
+#     plt.plot(UCBPI_mean,alpha=1,color='#33415C', linestyle=':', linewidth=3)
+
+
+# #     plt.plot(IDS_1_mean,alpha=1,color='#FF0000', linestyle='-', linewidth=4)
+# #     plt.plot(IDS_2_mean,alpha=1,color='#FF8700', linestyle='-', linewidth=4)
+#     plt.plot(IDS_3_mean,alpha=1,color='#FFD300', linestyle='-', linewidth=4)
+#     plt.plot(IDST_1_mean,alpha=1,color='#FF8FA3', linestyle='-', linewidth=4)
+#     plt.plot(IDSN_mean,alpha=1,color='#147DF5', linestyle='-.', linewidth=4)
+#     plt.plot(IDSW_mean,alpha=1,color='#DEFF0A', linestyle='-', linewidth=4)
+
+    
+#     if bounds:
+#         plt.fill_between(T, get_low(optimal_reward, EG_1), get_high(optimal_reward, EG_1), color='#000000', alpha=0.1)
+#         plt.fill_between(T, get_low(optimal_reward, EG_2), get_high(optimal_reward, EG_2), color='#000000', alpha=0.1)
+#         plt.fill_between(T, get_low(optimal_reward, EG_3), get_high(optimal_reward, EG_3), color='#000000', alpha=0.1)
+#         plt.fill_between(T, get_low(optimal_reward, TS), get_high(optimal_reward, TS), color='#666666', alpha=0.05)
+#         plt.fill_between(T, get_low(optimal_reward, UCB_1), get_high(optimal_reward, UCB_1), color='#666600', alpha=0.05)
+#         plt.fill_between(T, get_low(optimal_reward, UCB_2), get_high(optimal_reward, UCB_2), color='#666600', alpha=0.05)
+#         plt.fill_between(T, get_low(optimal_reward, UCBT), get_high(optimal_reward, UCBT), color='#666600', alpha=0.05)
+#         plt.fill_between(T, get_low(optimal_reward, UCBPI), get_high(optimal_reward, UCBPI), color='#666600', alpha=0.05)
+#         plt.fill_between(T, get_low(optimal_reward, IDS_1), get_high(optimal_reward, IDS_1), color='#FF6666', alpha=0.1)
+#         plt.fill_between(T, get_low(optimal_reward, IDS_2), get_high(optimal_reward, IDS_2), color='#FF6666', alpha=0.1)
+#         plt.fill_between(T, get_low(optimal_reward, IDS_3), get_high(optimal_reward, IDS_3), color='#FF6666', alpha=0.1)
+#         plt.fill_between(T, get_low(optimal_reward, IDST_1), get_high(optimal_reward, IDST_1), color='#FF6666', alpha=0.1)
+
+        
+        
+        
+#     plt.legend(['EG $ε$=0.05', 'EG $ε$=0.1', 'EG $ε$-0.15', 'TS', 'UCB c=1', 'UCB c=2', 'UCB-tuned',
+#                 'UCBPI', 'ACIDP L=2, n=2', 'ACIDP-$θ$ L=2, n=1', 'ACIDP-without Transferability Test L=2, n=1', 'ACIDP-window L=2, n=1'],
+#               bbox_to_anchor=(0.98, -0.05), ncol=6, fancybox=True)
+#     plt.title(title)
+#     plt.xlabel('Horizon')
+#     plt.ylabel('Cumulative Regret')
+#     plt.show()
