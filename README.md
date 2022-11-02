@@ -1,3 +1,5 @@
 This project documents the implementation and experiments of ACIDP in the paper "Non-stationary Dynamic Pricing via Actor-Critic Information Directed Pricing". 
 
 This paper presents a novel non-stationary dynamic pricing algorithm design, where pricing agents face incomplete demand information and market environment shifts. The agents run price experiments to learn about each product’s demand curve and the profit-maximizing price, while being aware of market environment shifts to avoid high opportunity costs from offering sub-optimal prices. The proposed ACIDP extends information-directed sampling (IDS) algorithms from statistical machine learning to include microeconomic choice theory, with a novel pricing strategy auditing procedure to escape sub-optimal pricing after market environment shift. The proposed ACIDP outperforms competing bandit algorithms including Upper Confidence Bound (UCB) and Thompson sampling (TS) in a series of market environment shifts.
+
+The basic design is inspired by DBaudry, https://github.com/DBaudry/Information_Directed_Sampling
